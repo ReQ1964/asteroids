@@ -7,7 +7,11 @@ class Player(CircleShape):
     def __init__(self, x, y):
         super().__init__(x, y, PLAYER_RADIUS)
         self.rotation = 0
-        self.timer = 0
+        self.shot_cooldown = 0
+        self.move_multiplier = 1
+        self.boost_duration = 2
+        self.boost_cooldown = 0
+        self.is_boosting = False
     # in the player class
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -22,7 +26,17 @@ class Player(CircleShape):
         self.rotation += dt * PLAYER_TURN_SPEED
     def update(self, dt):
         keys = pygame.key.get_pressed()
-        self.timer -= dt
+        self.shot_cooldown -= dt
+
+        if self.is_boosting is True:
+            self.boost_duration -= dt
+            if self.boost_duration <= 0:
+                self.is_boosting = False
+                self.move_multiplier = 1
+                self.boost_cooldown = 5
+                self.boost_duration = 2
+        else:
+            self.boost_cooldown -= dt
 
         if keys[pygame.K_a]:
             self.rotate(-dt)
@@ -34,12 +48,19 @@ class Player(CircleShape):
             self.move(-dt)
         if keys[pygame.K_SPACE]:
             self.shoot()
+        if keys[pygame.K_LSHIFT]:
+            self.boost()
     def move(self, dt):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
-        self.position += forward * PLAYER_SPEED * dt
+        self.position += forward * PLAYER_SPEED * dt * self.move_multiplier
 
     def shoot(self):
-        if not self.timer > 0:
+        if not self.shot_cooldown > 0:
             shot = Shot(self.position, SHOT_RADIUS)
             shot.velocity = pygame.Vector2(0,1).rotate(self.rotation) * PLAYER_SHOOT_SPEED
-        self.timer = PLAYER_SHOOT_COOLDOWN
+        self.shot_cooldown = PLAYER_SHOOT_COOLDOWN
+
+    def boost(self):
+        if self.boost_cooldown <= 0 and self.is_boosting is False:
+            self.is_boosting = True
+            self.move_multiplier = 2
