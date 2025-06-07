@@ -5,6 +5,8 @@ from player import Player
 from asteroid import Asteroid
 from asteroidfield import AsteroidField
 from shot import Shot
+from powerupspawner import PowerupSpawner
+from powerup import Powerup
 
 def setup_groups_and_containers():
     updatable = pygame.sprite.Group()
@@ -12,10 +14,13 @@ def setup_groups_and_containers():
     asteroids = pygame.sprite.Group()
     shots = pygame.sprite.Group()
 
-    AsteroidField.containers = (updatable)
+
+    AsteroidField.containers = (updatable,)
+    PowerupSpawner.containers = (updatable,)
     Asteroid.containers = (asteroids, updatable, drawable)
     Player.containers = (updatable, drawable)
     Shot.containers = (updatable, drawable, shots)
+    Powerup.containers = (updatable, drawable) 
 
     return {
         'updatable': updatable,
@@ -34,6 +39,7 @@ def main():
 
     player = Player(SCREEN_WIDTH / 2, SCREEN_HEIGHT/ 2)
     asteroidField = AsteroidField()
+    powerupspawner = PowerupSpawner()
 
     while(True):
         for event in pygame.event.get():
@@ -43,8 +49,11 @@ def main():
         groups['updatable'].update(dt)
         for asteroid in groups['asteroids']:
             if asteroid.collides(player):
-                print("Game over!")
-                sys.exit(0)
+                if player.is_shielding:
+                    asteroid.kill()
+                else:
+                    print("Game over!")
+                    sys.exit(0)
             for shot in groups['shots']:
                 if asteroid.collides(shot):
                     asteroid.split()

@@ -13,6 +13,9 @@ class Player(CircleShape):
         self.boost_duration = PLAYER_BOOST_DURATION
         self.boost_cooldown = 0
         self.is_boosting = False
+        
+        self.shield_duration = 2
+        self.is_shielding = True
     # in the player class
     def triangle(self):
         forward = pygame.Vector2(0, 1).rotate(self.rotation)
@@ -23,11 +26,21 @@ class Player(CircleShape):
         return [a, b, c]
     def draw(self, screen):
         pygame.draw.polygon(screen, "white", self.triangle(), 2)
+
+        if self.is_shielding:
+            triangle_center = (self.position.x, self.position.y - 23)
+            pygame.draw.circle(screen, "blue", triangle_center, 40, 2)
     def rotate(self, dt):
         self.rotation += dt * PLAYER_TURN_SPEED
     def update(self, dt):
         keys = pygame.key.get_pressed()
         self.shot_cooldown -= dt
+
+        if self.is_shielding is True:
+            self.shield_duration -= dt
+            if self.shield_duration <= 0:
+                self.is_shielding = False
+                self.shield_duration = 2
 
         if self.is_boosting is True:
             self.boost_duration -= dt
